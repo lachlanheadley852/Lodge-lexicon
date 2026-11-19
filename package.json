@@ -1,0 +1,19 @@
+{
+  "name": "lodge-lexicon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lexicon of the Lodge: a point-and-click adventure where spoken words built from syllables act on the world.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lachlanheadley852/Lodge-lexicon.git"
+  },
+  "devDependencies": {
+    "vite": "^8.3.8"
+  }
+}
