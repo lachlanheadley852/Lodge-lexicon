@@ -110,7 +110,7 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Scope:** Autosave to localStorage (in try/catch), including player position and facing; resume on reload; chapter select; new game.
 
 ### F5 · Ready for the Lost Word
-- **Status:** In progress (worker 2)
+- **Status:** Merged to dev (53 tests). Placeholder: the Lost Word's syllable, where it hides, and the flipped-word fallback lines (`INVERTED` in phrases2.js, `INVERTED1` in generic1.js) await the designer. Flipped words don't yet look or sound different.
 - **Branch:** `feature/F5-inversion-model`
 - **Scope:** Any syllable in a word can carry an `inverted` flag (`✦`) in the word model, rule matching and grimoire (mirrored sigil). Not exposed to the player yet; the Lost Word's syllable stays a placeholder.
 
