@@ -13,16 +13,19 @@ import {triggerAt} from './collision.js';
 import {createHud} from './hud.js';
 import {createFx} from './fx.js';
 import {buildRoom} from './rooms/index.js';
-import {setupRenderer} from './kit/lighting.js';
+import {setupRenderer, LIGHT} from './kit/lighting.js';
+import {detectQuality, isTouchDevice} from './quality.js';   /* 3D7 */
+import {createTouch} from './touch.js';                       /* 3D7 */
 
 const REACH=2.5;          /* items must be used within this distance (words have no limit) */
-const MAX_PIXEL_RATIO=2;
 const HINT_FREE='Click to look around · WASD to walk · Tab for grimoire';
 const HINT_FREE_CASTING='Click the view to look, then click your target';
+const HINT_TOUCH='Drag to look · stick to walk · tap to interact';
+const HINT_TOUCH_CASTING='Tap your target';
 const HINT_LOCKED='Tab: grimoire and items · Esc: put away · Hold Space: show hotspots';
 
 export function createThreeRenderer(){
-  let container=null, canvas=null, gl=null, hud=null, controls=null, fx=null;
+  let container=null, canvas=null, gl=null, hud=null, controls=null, fx=null, quality=null, tapLabelUntil=0;
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(70,16/9,.05,40);
   camera.rotation.order='YXZ';
@@ -110,15 +113,19 @@ export function createThreeRenderer(){
   }
 
   /* World point in front of the camera, for words spoken at nothing. */
-  function airPoint(){return camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(3).add(camera.position);}
+  function airPoint(ndc){
+    if(!ndc) return camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(3).add(camera.position);
+    raycaster.setFromCamera(ndc,camera); return raycaster.ray.at(3,new THREE.Vector3());
+  }
   function pointFor(world){
     const p=world.clone().project(camera), r=container.getBoundingClientRect();
     return {x:(p.x*.5+.5)*r.width, y:(.5-p.y*.5)*r.height, world:{x:world.x,y:world.y,z:world.z}};
   }
 
   /* The player clicked (pointer-locked) or walked into a doorway: route like a 2D click. */
-  function doClick(){
-    const h=pick(centre), id=h?h.id:null, world=h?h.point:airPoint();
+  function doClick(ndc=centre){
+    const h=pick(ndc), id=h?h.id:null, world=h?h.point:airPoint(ndc===centre?undefined:ndc);
+    if(ndc!==centre){tapLabelUntil=performance.now()+1600; hud.setLabel(id?(NAMES[id]||id):'',!!id&&!!lastState&&!!lastState.sel&&h.distance>REACH);}   /* touch: name what was tapped */
     if(id&&lastState&&lastState.sel&&h.distance>REACH){say('That is too far to reach. Step closer.'); return;}
     clickHandler(id,pointFor(world));
   }
@@ -131,7 +138,7 @@ export function createThreeRenderer(){
   /* ---------- frame ---------- */
   function resize(){
     const w=container.clientWidth||1, h=container.clientHeight||1;
-    gl.setPixelRatio(Math.min(window.devicePixelRatio||1,MAX_PIXEL_RATIO));
+    gl.setPixelRatio(Math.min(window.devicePixelRatio||1,quality.pixelRatio));
     gl.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
   }
   function syncCamera(){
@@ -147,12 +154,14 @@ export function createThreeRenderer(){
       if(room.update) room.update(now/1000);
     }
     syncCamera();
-    updateHover(); updateHighlight(); fx.update(dt);
+    if(document.body.classList.contains('touch')){ if(now>tapLabelUntil) hud.setLabel(''); } else updateHover();   /* touch has no crosshair */
+    updateHighlight(); fx.update(dt);
     /* an overlay (intro, ending) needs the mouse: give it back */
     if(controls.locked&&frame%10===0&&container.querySelector('.overlay:not(.hidden)')) controls.unlock();
     gl.render(scene,camera);
   }
   function refreshHint(){
+    if(document.body.classList.contains('touch')){hud.setHint(casting?HINT_TOUCH_CASTING:HINT_TOUCH); return;}
     hud.setHint(controls.locked?HINT_LOCKED:(casting?HINT_FREE_CASTING:HINT_FREE));
   }
 
@@ -163,12 +172,18 @@ export function createThreeRenderer(){
       container=el;
       canvas=document.createElement('canvas'); canvas.className='three'; canvas.tabIndex=-1;
       container.insertAdjacentElement('afterbegin',canvas);
-      gl=new THREE.WebGLRenderer({canvas,antialias:true});
+      quality=detectQuality();   /* 3D7: device tier (pixel ratio, antialias, shadows) from quality.js */
+      document.body.classList.add('three3d');
+      LIGHT.shadowMapSize=quality.shadowMapSize;   /* read when candles are built, so set before the first room */
+      gl=new THREE.WebGLRenderer({canvas,antialias:quality.antialias});
       setupRenderer(gl);   /* colour space, tone mapping, exposure, shadows: all owned by kit/lighting.js */
+      if(!quality.shadows) gl.shadowMap.enabled=false;
       hud=createHud(container);
       fx=createFx(scene,camera);
       controls=createControls(canvas,{onLockChange(){refreshHint();}});
-      canvas.addEventListener('click',()=>{ if(controls.locked) doClick(); else controls.lock(); });
+      canvas.addEventListener('click',e=>{ if(e.pointerType==='touch'||e.pointerType==='pen') return;   /* touch taps are handled by touch.js */
+        if(controls.locked) doClick(); else controls.lock(); });
+      createTouch(container,canvas,{controls,onTap:ndc=>{syncCamera(); doClick(ndc);},setHighlight:on=>api.setHighlight(on),isTouch:isTouchDevice});   /* 3D7 */
       document.addEventListener('keydown',e=>{
         if(e.key!=='Tab'||e.ctrlKey||e.metaKey||e.altKey) return;
         if(controls.locked){e.preventDefault(); controls.unlock();}
