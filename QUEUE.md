@@ -52,7 +52,7 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Done when:** with `?3d`, Degree I room 1 can be solved in greybox; without `?3d` the 2D game is unchanged; build passes.
 
 ### 3D2 · Materials, lighting and prop kit
-- **Status:** In progress (worker 1)
+- **Status:** Merged to dev (candlelit stone; ACES tone mapping; ≤2 shadow casters per room)
 - **Branch:** `feature/3D2-kit`
 - **Depends on:** F1 · *parallel-safe with 3D1 (own folder `src/render/three/kit/`)*
 - **Scope:** Code-made textures (dressed stone, brick, wood plank, iron, plaster) via canvas, with normal/roughness variation; candle (flame sprite + flickering point light with shadows); darkness/fog settings; builder functions for walls, floors (chequered lodge floor), arches, doors, pillars with globes, altar, table, lectern, bell, sconce, skull, hourglass. A dev-only showcase page under `src/render/three/kit/showcase.html` renders every builder.
@@ -60,7 +60,7 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Notes from 3D1:** current lighting is far too bright once lit (walls blow out to white) and pure black before; 3D1 needed ambient ~16 / hemisphere ~5 / candle 60 cd. Own the renderer-wide lighting setup (tone mapping, exposure, light units, shadow settings) so rooms look like candlelit stone.
 
 ### 3D3 · Degree I: Chamber of Reflection and Hall of Instruction
-- **Status:** Ready (after 3D1 and 3D2)
+- **Status:** In progress (worker 1)
 - **Branch:** `feature/3D3-degree1-early`
 - **Depends on:** 3D1, 3D2
 - **Scope:** Build both rooms with the kit, every hotspot from the 2D version, and all state changes (dark until lit, slab moved and key, bar, inner door opening, dust/book, veil and statue, cord, bell tied and rung, great door). Item use within reach.
@@ -89,9 +89,9 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Done when:** every syllable's signature in HANDOFF section 2 is visible in 3D.
 
 ### 3D7 · Mobile and touch
-- **Status:** Ready (after 3D3)
+- **Status:** In progress (worker 2)
 - **Branch:** `feature/3D7-touch`
-- **Depends on:** 3D3
+- **Depends on:** 3D1 · *parallel-safe with 3D3 (controls, HUD and panel layout only; no room files)*
 - **Scope:** On-screen stick to walk, drag to look, tap to interact, panel layout for phones, quality settings (shadow resolution, pixel ratio) chosen by device.
 - **Done when:** both degrees can be finished on a phone over the home network preview.
 
