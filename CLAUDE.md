@@ -3,7 +3,7 @@
 Read `docs/HANDOFF.md` first. It is the source of truth for the language rules, story and roadmap.
 
 ## Branches
-- `main`: published. Pushing it deploys to GitHub Pages. Only the orchestrator merges into main, and only when the designer approves a preview.
+- `main`: published. Its build is copied into the website repo (`lachlanheadley852.github.io`, folder `lodge-lexicon/`) with `npm run publish:site`. Only the orchestrator merges into main and publishes, and only when the designer approves a preview.
 - `dev`: integration. Feature branches merge here after review; previews are built from here.
 - `feature/<id>-<short-name>`: one per work item in `QUEUE.md`, branched from `dev`.
 
@@ -22,3 +22,4 @@ Read `docs/HANDOFF.md` first. It is the source of truth for the language rules, 
 ## Commands
 - `npm run dev`: dev server on port 5173, reachable on the home network.
 - `npm run build`: production build to `dist/`.
+- `npm run publish:site`: orchestrator only, from a clean `main`.

@@ -2,7 +2,11 @@
 
 A first-person point-and-click adventure for the browser. You rise through the degrees of a fictional lodge in 18th-century London, learning a sacred tongue syllable by syllable and speaking words that act on the world.
 
-Play: https://lachlanheadley852.github.io/Lodge-lexicon/
+Play: https://lachlanheadley852.github.io/lodge-lexicon/
+
+## Publishing
+
+The game is published as the `lodge-lexicon/` folder of the [lachlanheadley852.github.io](https://github.com/lachlanheadley852/lachlanheadley852.github.io) site repo. From a clean `main`, `npm run publish:site` builds and copies `dist/` into a sibling clone of that repo; then commit and push the site repo.
 
 ## Run locally
 
