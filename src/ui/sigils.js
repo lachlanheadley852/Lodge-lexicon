@@ -1,7 +1,8 @@
 /* Syllable sigils (inline SVG for the grimoire and the learn toast). */
 import {SYL} from '../game/data.js';
 
-export function sigil(k){
+/* opts.inverted: the syllable carries the Lost Word. Drawn mirrored on a dark ground with a small star. */
+export function sigil(k,opts={}){
   const T=SYL[k].type, c=T==='root'?'#c9a86a':T==='action'?'#9fb6cf':'#c79fd0';
   const inner={LUM:'<circle cx="15" cy="15" r="5" fill="#f2c25a"/>',KEL:'<rect x="10" y="10" width="10" height="10" fill="none" stroke="#c8b08a" stroke-width="2"/>',
     HAL:'<path d="M8 17 q3.5 -6 7 0 t7 0" stroke="#cfe6ff" stroke-width="2" fill="none"/>',
@@ -16,5 +17,6 @@ export function sigil(k){
     ON:'<path d="M10 13 L15 8 L20 13 M10 19 L15 14 L20 19" stroke="#c79fd0" stroke-width="2" fill="none"/>',
     ES:'<path d="M9 21 L21 9 M14 9 H21 V16" stroke="#c79fd0" stroke-width="2" fill="none"/>'}[k];
   const frame=T==='root'?`<rect x="3" y="3" width="24" height="24" fill="none" stroke="${c}" stroke-width="2"/>`:T==='action'?`<circle cx="15" cy="15" r="12" fill="none" stroke="${c}" stroke-width="2"/>`:`<path d="M15 2 L28 15 L15 28 L2 15Z" fill="none" stroke="${c}" stroke-width="1.5"/>`;
+  if(opts.inverted) return `<svg viewBox="0 0 30 30" class="inv"><rect width="30" height="30" rx="3" fill="#120d18"/><g transform="translate(30 0) scale(-1 1)" opacity=".85">${frame}${inner}</g><path d="M24 1 L25 4 L28 5 L25 6 L24 9 L23 6 L20 5 L23 4Z" fill="#e8d9ff"/></svg>`;
   return `<svg viewBox="0 0 30 30">${frame}${inner}</svg>`;
 }

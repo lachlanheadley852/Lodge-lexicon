@@ -7,13 +7,26 @@ export function fresh(ch){
     known:new Set(ch===1?[]:Object.keys(SYL))};
 }
 export let S=fresh(1);
+/*
+ * The Lost Word's mark. TODO(designer, HANDOFF section 7): the Lost Word's real syllable and where it hides
+ * are undecided. Nothing here is that syllable; this is only the symbol written before a flipped syllable.
+ */
+export const INV_MARK='✦';
+export const SLOTS=['root','action','mod'];
+const noInv=()=>({root:false,action:false,mod:false});
+/* inv[slot] (kept apart from word so word stays {root,action,mod}) is true when that slot's syllable carries the Lost Word (is flipped to its opposite). */
 export let word={root:null,action:null,mod:null};
+export let inv=noInv();
 
 /* Replace the state with a fresh one for chapter ch (does not emit). */
 export function resetState(ch){S=fresh(ch);}
-export function resetWord(){word={root:null,action:null,mod:null};}
-export function setWordPart(type,syl){word[type]=syl;}
-export function wordText(r,a,m){return r+'-'+a+(m?'-'+m:'');}
+export function resetWord(){word={root:null,action:null,mod:null}; inv=noInv();}
+export function setWordPart(type,syl){word[type]=syl; inv[type]=false;}
+/* 'LUM-SE-ON'. inv ({root,action,mod} booleans, optional) puts the mark before flipped syllables: '✦KEL-PA'. */
+export function wordText(r,a,m,inv){
+  const f=(k,slot)=>(inv&&inv[slot]&&k?INV_MARK:'')+k;
+  return f(r,'root')+'-'+f(a,'action')+(m?'-'+f(m,'mod'):'');
+}
 export function wordReady(){return !!(word.root&&word.action);}
 
 export function addLog(html){S.log.push(html); if(S.log.length>80) S.log.shift();}

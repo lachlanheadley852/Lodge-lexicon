@@ -1,6 +1,6 @@
 /* Wires game logic, HTML UI, audio and the renderer together. */
 import './style.css';
-import {S, CH, onEvent} from './game/index.js';
+import {S, CH, onEvent, debugSetLostWord} from './game/index.js';
 import * as audio from './audio/index.js';
 import {createSvgRenderer} from './render/svg/index.js';
 import * as ui from './ui/panel.js';
@@ -46,3 +46,6 @@ onEvent(e=>{
 
 wireInput(renderer);
 ui.buildTiles(); ui.say(CH[1].start); refresh();
+
+/* Dev only: window.lodgeDev.lostWord(true) switches on the Lost Word groundwork (flippable syllables). Not in production builds. */
+if(import.meta.env.DEV) window.lodgeDev={lostWord:on=>{debugSetLostWord(on); ui.renderWord();}};

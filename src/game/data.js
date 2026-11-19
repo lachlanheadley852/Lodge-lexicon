@@ -1,20 +1,26 @@
 /* Static game data: syllables, items, hotspot names, chapter text. No DOM, no audio. */
 export const SYL={
-  LUM:{type:'root',meaning:'light',color:'#f2c25a',freq:659,ch:1},
-  KEL:{type:'root',meaning:'stone',color:'#c8b08a',freq:131,ch:1},
-  HAL:{type:'root',meaning:'breath, voice',color:'#cfe6ff',freq:392,ch:1},
-  MIR:{type:'root',meaning:'water, truth',color:'#6fd0e2',freq:523,ch:2},
-  RAS:{type:'root',meaning:'flame, heat',color:'#ff8a3d',freq:196,ch:2},
-  VEL:{type:'root',meaning:'memory',color:'#d9b98a',freq:349,ch:2},
-  SE:{type:'action',meaning:'reveal',ch:1},
-  TU:{type:'action',meaning:'bind',ch:1},
-  PA:{type:'action',meaning:'open',ch:1},
-  MO:{type:'action',meaning:'still',ch:2},
-  NE:{type:'action',meaning:'mend',ch:2},
-  KA:{type:'action',meaning:'carry',ch:2},
-  ON:{type:'mod',meaning:'stronger',ch:2},
-  ES:{type:'mod',meaning:'far',ch:2}
+  LUM:{type:'root',meaning:'light',dark:'darkness',color:'#f2c25a',freq:659,ch:1},
+  KEL:{type:'root',meaning:'stone',dark:'ruin',color:'#c8b08a',freq:131,ch:1},
+  HAL:{type:'root',meaning:'breath, voice',dark:'silence',color:'#cfe6ff',freq:392,ch:1},
+  MIR:{type:'root',meaning:'water, truth',dark:'illusion',color:'#6fd0e2',freq:523,ch:2},
+  RAS:{type:'root',meaning:'flame, heat',dark:'cold, ash',color:'#ff8a3d',freq:196,ch:2},
+  VEL:{type:'root',meaning:'memory',dark:'forgetting',color:'#d9b98a',freq:349,ch:2},
+  SE:{type:'action',meaning:'reveal',dark:'conceal',ch:1},
+  TU:{type:'action',meaning:'bind',dark:'loose',ch:1},
+  PA:{type:'action',meaning:'open',dark:'shut',ch:1},
+  MO:{type:'action',meaning:'still',dark:'stir',ch:2},
+  NE:{type:'action',meaning:'mend',dark:'sever',ch:2},
+  KA:{type:'action',meaning:'carry',dark:'drop',ch:2},
+  ON:{type:'mod',meaning:'stronger',dark:'weaker',ch:2},
+  ES:{type:'mod',meaning:'far',dark:'near',ch:2}
 };
+/*
+ * `dark` above is the first-pass meaning a syllable flips to when it carries the Lost Word (HANDOFF section 2).
+ * Syllables that do not exist yet (Degree III) are recorded here only; they are NOT playable:
+ *   ZOR (root) decay, -IM (modifier) another, -UL (modifier) fleeting.
+ */
+export const DARK_PENDING={ZOR:'decay',IM:'another',UL:'fleeting'};
 export const NAMES={board:'the tracing board',altar:'the altar',candles:'the candles',pillarL:'the left pillar',pillarR:'the right pillar',
   door:'the stone door',mouth:'the carved mouth',doorway:'the open doorway',entrance:'the bricked entrance',inscription:'the inscription',
   sconce:'the empty sconce',alcove:'the alcove',whisper:'the carved spiral',

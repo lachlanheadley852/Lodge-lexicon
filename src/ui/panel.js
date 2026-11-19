@@ -1,5 +1,5 @@
 /* The HTML panel: message box, grimoire, inventory, word slots, hints, journal, toast and overlays. */
-import {S, word, SYL, ITEMS, CH, selectItem, pickSyllable} from '../game/index.js';
+import {S, word, SYL, ITEMS, CH, selectItem, pickSyllable, toggleInversion, inv, INV_MARK, lostWordKnown} from '../game/index.js';
 import {sigil} from './sigils.js';
 import {itemIcon} from './icons.js';
 
@@ -48,9 +48,22 @@ export function buildTiles(){
 
 export function renderWord(){
   document.querySelectorAll('#sylWrap .tile').forEach(b=>b.classList.toggle('sel',[word.root,word.action,word.mod].includes(b.dataset.k)));
-  $('slotR').textContent=word.root||'root'; $('slotR').classList.toggle('full',!!word.root);
-  $('slotA').textContent=word.action||'action'; $('slotA').classList.toggle('full',!!word.action);
-  $('slotM').textContent=word.mod?word.mod:'modifier'; $('slotM').classList.toggle('full',!!word.mod);
+  /* Inversion (the Lost Word) is only drawn once the game says it is known; until then nothing here changes. */
+  const lost=lostWordKnown();
+  const flip=slot=>lost&&inv[slot]&&word[slot]?INV_MARK:'';
+  $('slotR').textContent=word.root?flip('root')+word.root:'root'; $('slotR').classList.toggle('full',!!word.root);
+  $('slotA').textContent=word.action?flip('action')+word.action:'action'; $('slotA').classList.toggle('full',!!word.action);
+  $('slotM').textContent=word.mod?flip('mod')+word.mod:'modifier'; $('slotM').classList.toggle('full',!!word.mod);
+  [['slotR','root'],['slotA','action'],['slotM','mod']].forEach(([id,slot])=>{
+    const el=$(id); el.classList.toggle('inv',!!flip(slot)); el.classList.toggle('flippable',lost&&!!word[slot]);
+    el.title=lost&&word[slot]?(inv[slot]?'Click to unflip (now '+SYL[word[slot]].dark+')':'Click to flip to '+SYL[word[slot]].dark):'';
+    el.onclick=lost?()=>toggleInversion(slot):null;
+  });
+  document.querySelectorAll('#sylWrap .tile').forEach(b=>{
+    const k=b.dataset.k, want=lost&&word[SYL[k].type]===k&&inv[SYL[k].type]?'1':'';
+    if((b.dataset.inv||'')!==want){b.dataset.inv=want; b.querySelector('svg').outerHTML=sigil(k,{inverted:!!want});}
+    if(lost) b.title=`${k}: ${SYL[k].meaning}. Flipped: ${SYL[k].dark}.`; else b.removeAttribute('title');
+  });
   const ready=word.root&&word.action;
   castingHook(!!ready||!!S.sel);
   const hasR=[...S.known].some(k=>SYL[k].type==='root'), hasA=[...S.known].some(k=>SYL[k].type==='action');
