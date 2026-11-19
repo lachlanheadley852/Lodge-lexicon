@@ -1,6 +1,6 @@
 # Lexicon of the Lodge: notes for Claude
 
-Read `docs/HANDOFF.md` first. It is the source of truth for the language rules, story and roadmap.
+Read `docs/HANDOFF.md` first, then `docs/DECISIONS.md`, which overrides it (the game is becoming first-person 3D with free walking).
 
 ## Branches
 - `main`: published. Its build is copied into the website repo (`lachlanheadley852.github.io`, folder `lodge-lexicon/`) with `npm run publish:site`. Only the orchestrator merges into main and publishes, and only when the designer approves a preview.
