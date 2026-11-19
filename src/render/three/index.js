@@ -13,6 +13,7 @@ import {triggerAt} from './collision.js';
 import {createHud} from './hud.js';
 import {createFx} from './fx.js';
 import {buildRoom} from './rooms/index.js';
+import {setupRenderer} from './kit/lighting.js';
 
 const REACH=2.5;          /* items must be used within this distance (words have no limit) */
 const MAX_PIXEL_RATIO=2;
@@ -41,10 +42,11 @@ export function createThreeRenderer(){
   function disposeRoom(){
     if(!room) return;
     scene.remove(room.group);
-    room.group.traverse(o=>{
-      if(o.geometry) o.geometry.dispose();
-      if(o.material&&o.material.map) o.material.map.dispose();
-      if(o.isLight&&o.dispose) o.dispose();
+    room.group.traverse(o=>{   /* kit geometry, materials and textures are shared across rooms: keep them */
+      if(o.geometry&&!o.geometry.userData.shared) o.geometry.dispose();
+      const m=o.material;
+      if(m&&!Array.isArray(m)&&!m.userData.shared&&m.map&&!m.map.userData.shared) m.map.dispose();
+      if(o.isLight&&o.shadow&&o.shadow.map) o.shadow.map.dispose();
     });
     for(const h of hotspots){scene.remove(h.helper); h.helper.geometry.dispose();}
     hotspots=[];
@@ -65,7 +67,7 @@ export function createThreeRenderer(){
   function enterRoom(S,{spawn=false,fromRoom=null,fade=false}={}){
     disposeRoom();
     room=buildRoom(S); roomId=S.room; triggered=false;
-    scene.add(room.group); scene.background=new THREE.Color(room.background||0);
+    scene.add(room.group); scene.background=new THREE.Color(room.background||0); scene.fog=room.fog||null;
     collectHotspots();
     hud.setRoomName(ROOM_NAMES[S.room]||'');
     if(spawn){const sp=(fromRoom&&room.spawns[fromRoom])||room.spawns.default; controls.place(sp.x,sp.z,sp.yaw,0);}
@@ -162,7 +164,7 @@ export function createThreeRenderer(){
       canvas=document.createElement('canvas'); canvas.className='three'; canvas.tabIndex=-1;
       container.insertAdjacentElement('afterbegin',canvas);
       gl=new THREE.WebGLRenderer({canvas,antialias:true});
-      gl.shadowMap.enabled=true; gl.shadowMap.type=THREE.PCFShadowMap;
+      setupRenderer(gl);   /* colour space, tone mapping, exposure, shadows: all owned by kit/lighting.js */
       hud=createHud(container);
       fx=createFx(scene,camera);
       controls=createControls(canvas,{onLockChange(){refreshHint();}});

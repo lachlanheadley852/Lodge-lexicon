@@ -6,12 +6,12 @@
  */
 import * as THREE from 'three';
 import {box,slab,cyl,sphere,glow,hitBox,hot,textPlane,mat,wallRing} from './greybox.js';
+import * as K from '../kit/index.js';
 
 const H=2.8, W=2.5;          /* ceiling height, half-width of the interior */
 const GAP=0.6;               /* half-width of the east doorway */
 const DOOR_H=2.1;
 const STONE=0x6b655d, DARK=0x1a1512;
-const CANDLE=60;             /* candle light intensity (candela) */
 
 function group(id){const g=new THREE.Group(); if(id) hot(id,g); return g;}
 
@@ -21,16 +21,17 @@ export function buildReflection(S){
   const triggers=[];
   const animated=[];  /* fns(t) run every frame */
 
-  /* ---- shell ---- */
-  root.add(box(7,.1,7,0,-.05,0,0x4a453f));                       /* floor */
-  root.add(box(7,.1,7,0,H+.05,0,0x3d3934));                      /* ceiling */
-  root.add(slab(-3,-3,3,-W,0,H,STONE));                          /* north */
-  root.add(slab(-3,W,3,3,0,H,STONE));                            /* south */
-  root.add(slab(-3,-W,-W,W,0,H,STONE));                          /* west */
-  root.add(slab(W,-3,3.2,-GAP,0,H,STONE));                       /* east, either side of the doorway */
-  root.add(slab(W,GAP,3.2,3,0,H,STONE));
-  root.add(slab(W,-GAP,3.2,GAP,DOOR_H,H,STONE));                 /* lintel */
-  root.add(slab(2.9,-GAP,3.2,GAP,0,H,STONE));                    /* back of the doorway recess */
+  /* ---- shell (kit stone) ---- */
+  const sb=(x1,z1,x2,z2,y1,y2)=>K.bx(Math.abs(x2-x1),y2-y1,Math.abs(z2-z1),'stone',(x1+x2)/2,(y1+y2)/2,(z1+z2)/2);
+  root.add(K.bx(7,.1,7,'stone',0,-.05,0));                       /* floor */
+  root.add(K.bx(7,.1,7,'stone',0,H+.05,0));                      /* ceiling */
+  root.add(sb(-3,-3,3,-W,0,H));                                   /* north */
+  root.add(sb(-3,W,3,3,0,H));                                     /* south */
+  root.add(sb(-3,-W,-W,W,0,H));                                   /* west */
+  root.add(sb(W,-3,3.2,-GAP,0,H));                                /* east, either side of the doorway */
+  root.add(sb(W,GAP,3.2,3,0,H));
+  root.add(sb(W,-GAP,3.2,GAP,DOOR_H,H));                          /* lintel */
+  root.add(sb(2.9,-GAP,3.2,GAP,0,H));                             /* back of the doorway recess */
 
   const walls=wallRing(-W,-W,W,W).filter(w=>!(w[0]===W&&w[2]===W));
   walls.push([W,-W,W,-GAP],[W,GAP,W,W]);
@@ -42,14 +43,11 @@ export function buildReflection(S){
   vit.add(hitBox(2.6,.55,.12,0,2.05,-W+.06));
   root.add(vit);
 
-  root.add(box(2.6,.08,.8,0,.88,-2.0,0x3a2e24));                 /* table top */
-  for(const x of[-1.2,1.2]) for(const z of[-2.3,-1.7]) root.add(box(.07,.88,.07,x,.44,z,0x2a2018));
+  const table=K.table({w:2.6,d:.8,h:.92}); table.position.set(0,0,-2.0); root.add(table);
 
   const TOP=.92;
   const skull=group('skull');
-  skull.add(sphere(.1,-.85,TOP+.12,-2.0,0xcfc4a8));
-  skull.add(box(.09,.05,.08,-.85,TOP+.03,-1.97,0xbfb497));
-  skull.add(sphere(.022,-.88,TOP+.13,-1.92,0x1a1512)); skull.add(sphere(.022,-.82,TOP+.13,-1.92,0x1a1512));
+  const bone=K.skull(); bone.position.set(-.85,TOP,-2.0); bone.rotation.y=.25; skull.add(bone);
   if(!f.flint){
     const shard=box(.05,.012,.03,-.85,TOP+.007,-1.9,0xe8e4dc,{emissive:0x888070,emissiveIntensity:.6});
     shard.rotation.y=.6; skull.add(shard);
@@ -60,31 +58,18 @@ export function buildReflection(S){
   root.add(skull);
 
   const candle=group('candle');
-  candle.add(cyl(.09,.02,0,TOP+.01,-2.0,0x2a2420));
-  const stick=cyl(.025,.22,0,TOP+.12,-2.0,0xd8ccb0); stick.castShadow=false; candle.add(stick);
+  const wax=K.candle({height:.22,lit:f.lit,shadow:true,seed:3});   /* the room's one shadow caster */
+  wax.position.set(0,TOP,-2.0); candle.add(wax);
   candle.add(hitBox(.24,.4,.24,0,TOP+.2,-2.0));
   root.add(candle);
-  let candleLight=null, flame=null;
-  if(f.lit){
-    flame=glow(new THREE.SphereGeometry(.03,10,8),0xffd27a,0,TOP+.27,-2.0); flame.scale.set(1,1.8,1); candle.add(flame);
-    candleLight=new THREE.PointLight(0xffb765,CANDLE,0,2); candleLight.position.set(0,TOP+.34,-2.0);
-    candleLight.castShadow=true; candleLight.shadow.mapSize.set(1024,1024); candleLight.shadow.bias=-.003; candleLight.shadow.camera.near=.05; candleLight.shadow.camera.far=12; candleLight.shadow.radius=3;
-    root.add(candleLight);
-    animated.push(t=>{const k=1+.07*Math.sin(t*13)+.05*Math.sin(t*7.3+1); candleLight.intensity=CANDLE*k; flame.scale.set(1,1.8*k,1);});
-  }
 
   const hg=group('hourglass');
-  hg.add(cyl(.06,.015,.55,TOP+.008,-2.0,0x4a3a2a)); hg.add(cyl(.06,.015,.55,TOP+.2,-2.0,0x4a3a2a));
-  const glass=new THREE.MeshStandardMaterial({color:0x8fa3a8,transparent:true,opacity:.5,roughness:.2});
-  const lo=new THREE.Mesh(new THREE.CylinderGeometry(.01,.045,.09,12),glass); lo.position.set(.55,TOP+.065,-2.0);
-  const hi=new THREE.Mesh(new THREE.CylinderGeometry(.045,.01,.09,12),glass); hi.position.set(.55,TOP+.155,-2.0);
-  hg.add(lo,hi,cyl(.03,.03,.55,TOP+.03,-2.0,0xc9a86a));
+  const sand=K.hourglass(); sand.position.set(.55,TOP,-2.0); hg.add(sand);
   hg.add(hitBox(.2,.3,.2,.55,TOP+.1,-2.0));
   root.add(hg);
 
   const bread=group('bread');
-  bread.add(box(.2,.07,.11,.9,TOP+.035,-2.0,0x8a6a3e));
-  bread.add(cyl(.04,.08,1.12,TOP+.04,-2.0,0x2f5560));
+  const fare=K.breadAndWater(); fare.position.set(1.0,TOP,-2.0); bread.add(fare);
   bread.add(hitBox(.5,.2,.25,1.0,TOP+.06,-2.0));
   root.add(bread);
 
@@ -97,7 +82,7 @@ export function buildReflection(S){
     way.children[0].rotation.y=-Math.PI/2; way.children[0].userData.noPick=true;
     way.add(hitBox(.4,DOOR_H,GAP*2,2.7,DOOR_H/2,0));
     root.add(way);
-    const warm=new THREE.PointLight(0xffb765,3,6,2); warm.position.set(2.7,1.4,0); root.add(warm);
+    root.add(K.fill({x:2.7,y:1.4,z:0,intensity:K.LIGHT.doorFill,distance:6}));
     walls.push([W,-GAP,2.9,-GAP],[W,GAP,2.9,GAP],[2.9,-GAP,2.9,GAP]);
     triggers.push({x1:W-.05,x2:2.9,z1:-GAP,z2:GAP,hotspot:'toHall'});
   } else {
@@ -110,14 +95,14 @@ export function buildReflection(S){
     /* the line of light under the door, the player's only landmark in the dark */
     const strip=glow(new THREE.PlaneGeometry(GAP*2,.035),0xffcf7a,W-.001,.02,0,.9); strip.rotation.y=-Math.PI/2; root.add(strip);
     const spill=glow(new THREE.PlaneGeometry(1.6,1.0),0xffcf7a,W-.8,.004,0,.07); spill.rotation.x=-Math.PI/2; root.add(spill);
-    const seep=new THREE.PointLight(0xffcf7a,.9,4,2); seep.position.set(W-.2,.1,0); root.add(seep);
+    /* light from the hall seeping under the door: a faint warm spill raking across the floor */
+    root.add(K.spill({x:W-.15,y:.12,z:0,tx:W-1.6,ty:0,tz:0,color:0xffc27a,intensity:K.LIGHT.spill,angle:1.3,distance:5}));
   }
 
   /* ---- south: bricked entrance and inscription ---- */
   const ent=group('entrance');
-  ent.add(box(1.4,2.0,.12,0,1.0,W-.06,0x5a4a3e));
-  const archTop=new THREE.Mesh(new THREE.CylinderGeometry(.7,.7,.12,20),mat(0x5a4a3e)); archTop.rotation.x=Math.PI/2; archTop.position.set(0,2.0,W-.06);
-  archTop.castShadow=archTop.receiveShadow=true; ent.add(archTop);
+  ent.add(K.bx(1.4,2.0,.12,'brick',0,1.0,W-.06));
+  const archTop=K.cy(.7,.7,.12,'brick',0,2.0,W-.06,20); archTop.rotation.x=Math.PI/2; ent.add(archTop);
   ent.add(hitBox(1.5,2.8,.3,0,1.4,W-.1));
   root.add(ent);
   const ins=group('inscription');
@@ -135,8 +120,7 @@ export function buildReflection(S){
     slabBox.add(box(1,.1,.9,SX,.05,SZ+1.15,0x3a332c));
     if(!f.keyTaken){
       const key=group('key');
-      const ring=new THREE.Mesh(new THREE.TorusGeometry(.035,.009,8,14),mat(0xb8a37a,{metalness:.5,roughness:.5})); ring.rotation.x=Math.PI/2; ring.position.set(SX-.1,.03,SZ); ring.castShadow=true;
-      key.add(ring, box(.16,.014,.014,SX,.03,SZ,0xb8a37a,{metalness:.5,roughness:.5}), box(.014,.014,.04,SX+.06,.03,SZ+.02,0xb8a37a));
+      const iron=K.ironKey(); iron.position.set(SX,0,SZ); key.add(iron);
       key.add(hitBox(.32,.2,.3,SX-.02,.08,SZ));
       root.add(key);
     }
@@ -145,20 +129,21 @@ export function buildReflection(S){
 
   if(f.lit&&!f.barTaken){
     const bar=group('bar');
-    const rod=cyl(.022,1.1,0,0,0,0x6b3f22,10); rod.position.set(-W+.1,.55,-W+.12); rod.rotation.z=-.1; bar.add(rod);
-    bar.add(box(.07,.07,.02,-W+.04,1.07,-W+.12,0x6b3f22));
+    const rod=K.ironBar({length:1.1,mode:'leaning'}); rod.position.set(-W+.14,0,-W+.2); bar.add(rod);
     bar.add(hitBox(.35,1.2,.35,-W+.12,.6,-W+.15));
     root.add(bar);
   }
 
   /* ---- light ---- */
-  root.add(new THREE.AmbientLight(f.lit?0x7a6a58:0x3a3a48,f.lit?16:.6));
-  root.add(new THREE.HemisphereLight(0x6a6258,0x201a14,f.lit?5:.05));
+  /* kit atmosphere: a faint floor of light so corners stay readable once the candle burns; almost
+     none while it is dark, so only the strip under the door and its spill show anything */
+  const atm=K.atmosphere(f.lit?'candlelit':'dark'); root.add(atm.group);
+  const tick=K.collectUpdaters(root);
 
   return {
     group:root, plan, triggers,
-    background:0x000000,
+    background:atm.background, fog:atm.fog,
     spawns:{default:{x:0,z:1.4,yaw:0},hall:{x:2.05,z:0,yaw:Math.PI/2}},
-    update(t){for(const fn of animated) fn(t);}
+    update(t){tick(t); for(const fn of animated) fn(t);}
   };
 }
