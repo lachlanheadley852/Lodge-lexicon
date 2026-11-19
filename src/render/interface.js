@@ -15,6 +15,7 @@
  * @property {(fn:(hotspotId:string|null,point:Point)=>void)=>void} onClick
  *                                                           the player clicked hotspot X, or nothing (null), at point P
  * @property {(fn:(direction:-1|1)=>void)=>void} onTurn      the player asked to turn (2D renderer only; others may never call it)
+ * @property {boolean} [usesTurning]  false when the renderer moves the player itself (3D): arrow keys then do not call turn(). Default true.
  *
  * The state passed to show() is the game state object (src/game/state.js `S`): room, view, f (flags), inv, ...
  */

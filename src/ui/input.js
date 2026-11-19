@@ -17,14 +17,16 @@ export function wireInput(renderer){
     if(t) interact(t);
   });
   renderer.onTurn(turn);
+  /* Arrow keys turn the view only for renderers that use fixed N/E/S/W views (the 2D one). */
+  const turns=renderer.usesTurning!==false;
 
   $('clearBtn').onclick=clearWord;
   $('hintBtn').onclick=()=>{$('hintBtn').classList.toggle('on'); renderer.setHighlight($('hintBtn').classList.contains('on'));};
   $('muteBtn').onclick=()=>{$('muteBtn').textContent=audio.toggleMute()?'Sound off':'Sound on';};
   document.addEventListener('keydown',e=>{
     if(e.code==='Space'){renderer.setHighlight(true);e.preventDefault();}
-    if(e.key==='ArrowLeft') turn(-1);
-    if(e.key==='ArrowRight') turn(1);
+    if(turns&&e.key==='ArrowLeft') turn(-1);
+    if(turns&&e.key==='ArrowRight') turn(1);
     if(e.key==='Escape') escape();
   });
   document.addEventListener('keyup',e=>{if(e.code==='Space'&&!$('hintBtn').classList.contains('on'))renderer.setHighlight(false);});
