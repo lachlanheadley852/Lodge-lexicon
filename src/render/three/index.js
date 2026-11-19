@@ -145,7 +145,7 @@ export function createThreeRenderer(){
       if(room.update) room.update(now/1000);
     }
     syncCamera();
-    updateHover(); updateHighlight(); fx.update();
+    updateHover(); updateHighlight(); fx.update(dt);
     /* an overlay (intro, ending) needs the mouse: give it back */
     if(controls.locked&&frame%10===0&&container.querySelector('.overlay:not(.hidden)')) controls.unlock();
     gl.render(scene,camera);
@@ -164,7 +164,7 @@ export function createThreeRenderer(){
       gl=new THREE.WebGLRenderer({canvas,antialias:true});
       gl.shadowMap.enabled=true; gl.shadowMap.type=THREE.PCFShadowMap;
       hud=createHud(container);
-      fx=createFx(scene);
+      fx=createFx(scene,camera);
       controls=createControls(canvas,{onLockChange(){refreshHint();}});
       canvas.addEventListener('click',()=>{ if(controls.locked) doClick(); else controls.lock(); });
       document.addEventListener('keydown',e=>{
