@@ -11,7 +11,7 @@ Design decisions that override the handoff are in `docs/DECISIONS.md` (the game 
 ## Phase 1: separate the game from how it is drawn
 
 ### F1 · Split into modules, logic apart from rendering
-- **Status:** In progress (worker 1)
+- **Status:** Merged to dev (cffe7cf)
 - **Branch:** `feature/F1-modules`
 - **Depends on:** nothing
 - **Scope:** Move the single `<script>` in `index.html` into ES modules under `src/`:
@@ -26,7 +26,7 @@ Design decisions that override the handoff are in `docs/DECISIONS.md` (the game 
   - `npm run build` passes; `docs/prototype/` untouched.
 
 ### F2 · Tests for the language and both solution paths
-- **Status:** Ready (after F1)
+- **Status:** In progress (worker 1)
 - **Branch:** `feature/F2-tests`
 - **Depends on:** F1
 - **Scope:** Node's built-in runner (`node --test`), no new dependencies, `npm test`. Cover word grammar, every Degree I/II word giving a non-empty response on every hotspot, and scripted playthroughs of both solution paths asserting flags after each step and reaching the ending.
@@ -44,7 +44,7 @@ Design decisions that override the handoff are in `docs/DECISIONS.md` (the game 
 All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 
 ### 3D1 · First-person engine with a greybox room
-- **Status:** Ready (after F1)
+- **Status:** In progress (worker 2)
 - **Branch:** `feature/3D1-engine`
 - **Depends on:** F1 · *parallel-safe with F2*
 - **Scope:** `src/render/three/`: implement the renderer interface with Three.js. Pointer-lock mouse look, WASD/arrow walking at a calm pace, eye height ~1.6 m, collision against a simple per-room 2D floor plan (walls, prop footprints, no-walk zones). Centre crosshair; raycast picks the hotspot under it and shows its name; click routes to the existing interact / use-item / cast logic. Space highlights all hotspots in view. Tab frees the cursor for the panel; picking a word or item returns to looking. Room switching through doorway triggers with a short fade. Prove it with a greybox (untextured boxes) Chamber of Reflection whose hotspots all work.
