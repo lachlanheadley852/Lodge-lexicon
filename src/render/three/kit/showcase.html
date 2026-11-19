@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kit showcase (dev only)</title>
+<style>
+  html,body{margin:0;height:100%;background:#050403;color:#d8c9a8;font:13px/1.35 Georgia,serif;overflow:hidden}
+  canvas{display:block;width:100vw;height:100vh;outline:none}
+  #panel{position:fixed;top:8px;right:8px;width:230px;max-height:calc(100vh - 16px);overflow:auto;background:rgba(10,8,6,.82);border:1px solid #3a2e22;padding:8px 10px;border-radius:4px}
+  #panel h4{margin:8px 0 3px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#a58a5a}
+  #panel label{display:block;cursor:pointer;padding:1px 0}
+  #panel button,#panel select{background:#241b13;color:#d8c9a8;border:1px solid #4a3a2a;border-radius:3px;margin:2px 2px 0 0;padding:2px 7px;font:inherit;cursor:pointer}
+  #panel input[type=range]{width:100%}
+  #fps{position:fixed;left:8px;top:8px;font:12px monospace;background:rgba(0,0,0,.6);padding:3px 7px;border-radius:3px}
+  #hover{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);font-size:14px;color:#ffe08a;text-shadow:0 0 6px #000}
+  #help{position:fixed;left:8px;bottom:8px;font-size:11px;opacity:.6}
+</style>
+</head>
+<body>
+<canvas id="c" tabindex="0"></canvas>
+<div id="fps">fps</div>
+<div id="hover"></div>
+<div id="help">Drag to look · WASD / arrows to walk · Shift faster · Q/E up/down</div>
+<div id="panel"></div>
+<script type="module" src="./showcase.js"></script>
+</body>
+</html>
