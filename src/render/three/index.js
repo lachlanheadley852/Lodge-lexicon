@@ -3,7 +3,7 @@
  * Walking and looking happen here, so it declares usesTurning:false and never calls onTurn.
  *
  * Files: controls.js (pointer lock, walking), collision.js (floor plans), hud.js (crosshair, hint,
- * fade), fx.js (placeholder word effects), rooms/ (per-room builders; greybox for now).
+ * fade), fx.js (placeholder word effects), rooms/ (per-room builders from the kit; built once per entry, then updated in place by room.apply).
  */
 import * as THREE from 'three';
 import {NAMES, ROOM_NAMES} from '../../game/data.js';
@@ -51,13 +51,19 @@ export function createThreeRenderer(){
       if(m&&!Array.isArray(m)&&!m.userData.shared&&m.map&&!m.map.userData.shared) m.map.dispose();
       if(o.isLight&&o.shadow&&o.shadow.map) o.shadow.map.dispose();
     });
+    clearHotspots();
+  }
+  function clearHotspots(){
     for(const h of hotspots){scene.remove(h.helper); h.helper.geometry.dispose();}
     hotspots=[];
   }
+  /* an object counts only while it and all its parents are visible (rooms hide things in place) */
+  function shown(o){for(;o;o=o.parent) if(!o.visible) return false; return true;}
   function collectHotspots(){
+    clearHotspots();
     room.group.updateMatrixWorld(true);
     room.group.traverse(o=>{
-      if(!o.userData.hotspot) return;
+      if(!o.userData.hotspot||!shown(o)) return;
       const box=new THREE.Box3().setFromObject(o);
       const helper=new THREE.Box3Helper(box,0xffe08a);
       helper.material.depthTest=false; helper.material.transparent=true; helper.material.toneMapped=false;
@@ -65,12 +71,13 @@ export function createThreeRenderer(){
       hotspots.push({id:o.userData.hotspot,obj:o,box,helper});
     });
   }
+  function syncAtmosphere(){scene.background=new THREE.Color(room.background||0); scene.fog=room.fog||null;}
   /* spawn: false keeps the player where they stand; otherwise place them (at the doorway they came
      through if `fromRoom` has a spawn here, else the default). fade: cut to black and fade in. */
   function enterRoom(S,{spawn=false,fromRoom=null,fade=false}={}){
     disposeRoom();
     room=buildRoom(S); roomId=S.room; triggered=false;
-    scene.add(room.group); scene.background=new THREE.Color(room.background||0); scene.fog=room.fog||null;
+    scene.add(room.group); syncAtmosphere();
     collectHotspots();
     hud.setRoomName(ROOM_NAMES[S.room]||'');
     if(spawn){const sp=(fromRoom&&room.spawns[fromRoom])||room.spawns.default; controls.place(sp.x,sp.z,sp.yaw,0);}
@@ -79,32 +86,39 @@ export function createThreeRenderer(){
 
   /* ---------- picking ---------- */
   function hotspotOf(o){for(;o;o=o.parent) if(o.userData.hotspot) return o.userData.hotspot; return null;}
+  /* Does clicking this hotspot handle something physically (so it needs reach)? userData.reach on the
+     hotspot object is true, or a function of the flags (S.f), set per hotspot in the room data. */
+  function needsReach(o){
+    for(;o;o=o.parent) if(o.userData.hotspot){const r=o.userData.reach; return typeof r==='function'?!!(lastState&&r(lastState.f)):!!r;}
+    return false;
+  }
   /* First thing along the ray from the camera through ndc. Walls block hotspots behind them. */
   function pick(ndc,far=40){
     if(!room) return null;
     raycaster.setFromCamera(ndc,camera); raycaster.far=far;
     for(const h of raycaster.intersectObject(room.group,true)){
-      if(h.object.userData.noPick) continue;
-      return {id:hotspotOf(h.object),distance:h.distance,point:h.point};
+      if(h.object.userData.noPick||!shown(h.object)) continue;
+      return {id:hotspotOf(h.object),distance:h.distance,point:h.point,reach:needsReach(h.object)};
     }
     return null;
   }
   function updateHover(){
     hovered=pick(centre);
     const id=hovered&&hovered.id;
-    const tooFar=!!id&&!!lastState&&!!lastState.sel&&hovered.distance>REACH;
+    const tooFar=!!id&&hovered.distance>REACH&&((!!lastState&&!!lastState.sel)||(hovered.reach&&!casting));
     hud.setLabel(id?(NAMES[id]||id):'',tooFar);
   }
   function updateHighlight(){
     if(!highlight||!room){for(const h of hotspots) h.helper.visible=false; return;}
     camera.updateMatrixWorld(); pv.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse); frustum.setFromProjectionMatrix(pv);
     for(const h of hotspots){
+      h.box.setFromObject(h.obj);   /* things move in place (slab, doors): keep the box current */
       let vis=frustum.intersectsBox(h.box);
       if(vis){ /* hide it when a wall is in the way */
         h.box.getCenter(tmp); const d=tmp.distanceTo(camera.position);
         raycaster.set(camera.position,tmp.clone().sub(camera.position).normalize()); raycaster.far=d;
         for(const hit of raycaster.intersectObject(room.group,true)){
-          if(hit.object.userData.noPick) continue;
+          if(hit.object.userData.noPick||!shown(hit.object)) continue;
           if(hotspotOf(hit.object)!==h.id&&hit.distance<d-.4) vis=false; break;
         }
       }
@@ -125,8 +139,10 @@ export function createThreeRenderer(){
   /* The player clicked (pointer-locked) or walked into a doorway: route like a 2D click. */
   function doClick(ndc=centre){
     const h=pick(ndc), id=h?h.id:null, world=h?h.point:airPoint(ndc===centre?undefined:ndc);
-    if(ndc!==centre){tapLabelUntil=performance.now()+1600; hud.setLabel(id?(NAMES[id]||id):'',!!id&&!!lastState&&!!lastState.sel&&h.distance>REACH);}   /* touch: name what was tapped */
-    if(id&&lastState&&lastState.sel&&h.distance>REACH){say('That is too far to reach. Step closer.'); return;}
+    /* items and handling things need reach; looking at things and speaking words do not */
+    const tooFar=!!id&&h.distance>REACH&&((!!lastState&&!!lastState.sel)||(h.reach&&!casting));
+    if(ndc!==centre){tapLabelUntil=performance.now()+1600; hud.setLabel(id?(NAMES[id]||id):'',tooFar);}   /* touch: name what was tapped */
+    if(tooFar){say('That is too far to reach. Step closer.'); return;}
     clickHandler(id,pointFor(world));
   }
   function checkTriggers(){
@@ -199,7 +215,7 @@ export function createThreeRenderer(){
       if(!room) enterRoom(S,{spawn:true});
       else if(fresh) enterRoom(S,{spawn:true,fade:true});                            /* chapter (re)start */
       else if(S.room!==roomId) enterRoom(S,{spawn:true,fromRoom:roomId,fade:true});  /* travelled */
-      else enterRoom(S,{});                                                          /* flags changed: rebuild in place */
+      else{room.apply(S); syncAtmosphere(); collectHotspots();}                      /* flags changed: update in place */
       refreshHint();
     },
     setHighlight(on){highlight=!!on;},
@@ -232,6 +248,8 @@ export function createThreeRenderer(){
       /* same path as a pointer-locked click on the crosshair */
       clickCenter(){syncCamera(); updateHover(); doClick();},
       freeKeys(on=true){controls.freeKeys=on;},
+      /* run the room's per-frame update for N seconds (hidden panes do not run rAF): lets doors and slabs finish moving */
+      advance(seconds){let t=performance.now()/1000; for(let i=0;i<seconds*60;i++){t+=1/60; if(room.update) room.update(t);} },
       /* simulate holding keys (f,b,l,r) for N seconds at 60 fps; no rAF needed (hidden panes do not run it) */
       step(seconds,keys){
         const code={f:'KeyW',b:'KeyS',l:'KeyA',r:'KeyD'}; controls.freeKeys=true;
