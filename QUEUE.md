@@ -82,7 +82,7 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Done when:** Degree II can be completed in 3D.
 
 ### 3D6 · Word effects in 3D
-- **Status:** In progress (worker 2)
+- **Status:** Merged to dev (all 108 words show root, action and modifier; no leaks)
 - **Branch:** `feature/3D6-word-fx`
 - **Depends on:** 3D1 · *parallel-safe with 3D3*
 - **Scope:** In world space at the target: per-root particles (LUM sparks, KEL dust, HAL wisps, MIR ripples, RAS embers, VEL drifting frames) and per-action shapes (SE rings, TU closing dashed rings, PA split, MO spokes and hexagon, NE closing arcs, KA travelling dots); -ES beam from the player to the target first; -ON replays larger. Short-lived light from the root colour.
@@ -110,7 +110,7 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Scope:** Autosave to localStorage (in try/catch), including player position and facing; resume on reload; chapter select; new game.
 
 ### F5 · Ready for the Lost Word
-- **Status:** Ready (after F3)
+- **Status:** In progress (worker 2)
 - **Branch:** `feature/F5-inversion-model`
 - **Scope:** Any syllable in a word can carry an `inverted` flag (`✦`) in the word model, rule matching and grimoire (mirrored sigil). Not exposed to the player yet; the Lost Word's syllable stays a placeholder.
 
