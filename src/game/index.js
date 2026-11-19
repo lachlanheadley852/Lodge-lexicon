@@ -2,12 +2,21 @@
  * Game logic API. Importable and drivable in plain Node: no DOM, no audio, no timers.
  * Everything a presenter needs to show is emitted as an event (see events.js).
  * Presenters (the HTML UI, audio, a renderer) call these functions in response to player input.
+ * The puzzles and all text live in content/ as data; engine.js reads them.
  */
 import {SYL, ITEMS, NAMES, CH, TRAVEL, ROOM_NAMES} from './data.js';
 import {S, word, resetState, resetWord, wordText, wordReady, addLog, say} from './state.js';
 import {emit} from './events.js';
-import {interactEarly, useItem, look1, resolve1} from './rules1.js';
-import {look2, resolve2} from './rules2.js';
+import {respond, holds, fill} from './engine.js';
+import words1 from './content/words1.js';
+import generic1 from './content/generic1.js';
+import words2 from './content/words2.js';
+import {generic2} from './content/generic2.js';
+import items from './content/items.js';
+import examine1 from './content/examine1.js';
+import examine2 from './content/examine2.js';
+import travelText from './content/travel.js';
+import {HOLD_ITEM, PUT_AWAY, ENDINGS, ENDING_STATS, WAY_OPEN} from './content/messages.js';
 
 export {onEvent, emit} from './events.js';
 export {S, word, wordReady, wordText, say} from './state.js';
@@ -23,16 +32,16 @@ export function startChapter(ch){
 /* Select (or deselect) a carried item. Clears the word being built. */
 export function selectItem(k){
   S.sel=S.sel===k?null:k; resetWord();
-  if(S.sel) say(`You hold the ${ITEMS[k].name.toLowerCase()}. Click on something to use it there.`);
+  if(S.sel) say(HOLD_ITEM.replace('{item}',ITEMS[k].name.toLowerCase()));
   emit('panel');
 }
 /* Click on empty space while holding an item. */
 export function putAway(){
-  S.sel=null; emit('panel'); say('You put it away.');
+  S.sel=null; emit('panel'); say(PUT_AWAY);
 }
 /* Use the selected item on hotspot t. */
 export function useSelected(t){
-  const k=S.sel; const res=useItem(k,t); S.sel=null;
+  const k=S.sel; const res=respond(items,{item:k,t}); S.sel=null;
   say(res); emit('changed',{reason:'use'});
 }
 
@@ -48,13 +57,23 @@ export function clearWord(){resetWord(); emit('panel');}
 /* Esc: put away the item and clear the word. */
 export function escape(){clearWord(); S.sel=null; emit('panel');}
 
+/* The reply to a spoken word: the first matching rule, else the generic reply for the degree. */
+function resolveWord(root,action,mod,t){
+  const ctx={t,word:{root,action,mod},nameFallback:'the empty air'};
+  if(S.ch===1) return respond(words1,ctx) ?? respond(generic1,ctx);
+  const res=respond(words2,ctx);
+  if(res!==null) return res;
+  const g=generic2(root,action,mod);
+  return fill(g.template,{...ctx,vars:g.vars});
+}
+
 /* Speak the current word (it must have a root and an action) at hotspot t (or null for empty air). */
 export function cast(t){
   const r=word.root,a=word.action,m=word.mod,w=wordText(r,a,m);
   S.spoken++; S.tried.add(w);
   emit('cast',{root:r,action:a,mod:m,target:t});
   S.fanfare=false;
-  const res=S.ch===1?resolve1(r,a,m,t):resolve2(r,a,m,t);
+  const res=resolveWord(r,a,m,t);
   say(`<span class="w">${w}</span> — ${res}`);
   addLog(`<span>${w}</span> → ${NAMES[t]||'the air'}`);
   clearWord();
@@ -65,23 +84,15 @@ export function cast(t){
 
 export function travel(t){
   const [room,view]=TRAVEL[t]; S.room=room; S.view=view;
-  const first={hall:'hallSeen',apprentice:'appSeen'}[room];
-  let msg={hall:'You step into a long hall. A lectern stands before a great double door. Something veiled waits to the east, and a bell hangs high on the west wall.',
-    reflection:'You step back into the small room where you began.',apprentice:'You enter the Apprentice\'s Chamber. Candlelight, two great pillars, and a faded tracing board above the altar.'}[room];
-  if(room==='hall'&&S.f.hallSeen) msg='You are back in the Hall of Instruction.';
-  if(room==='apprentice'&&S.f.appSeen) msg='You are back in the Apprentice\'s Chamber.';
-  if(room==='apprentice'&&!S.f.appSeen) msg+=' The door behind you stays open. This time, the way back is not sealed.';
-  if(first) S.f[first]=true;
-  say(msg); emit('changed',{reason:'travel'});
+  say(respond(travelText,{t})); emit('changed',{reason:'travel'});
 }
 
 /* Click on hotspot t with nothing selected and no word ready. */
 export function interact(t){
   if(TRAVEL[t]) return travel(t);
-  if(t==='doorway') return finish();
-  let s=null;
-  if(S.ch===1&&(S.room==='reflection'||S.room==='hall')) s=interactEarly(t);
-  if(s===null) s=S.ch===1?look1(t):look2(t);
+  /* The doorway ends the degree only once the way is open; otherwise it is examined like anything else. */
+  if(t==='doorway'&&holds(WAY_OPEN[S.ch])) return finish();
+  const s=respond(S.ch===1?examine1:examine2,{t});
   if(s) say(s);
   emit('changed',{reason:'look'});
 }
@@ -91,10 +102,8 @@ export function turn(d){S.view=(S.view+d+4)%4; emit('changed',{reason:'turn'});}
 
 export function finish(){
   emit('fanfare',{after:null});
-  const C=CH[S.ch];
-  emit('ending',{ch:S.ch,
-    title:S.ch===1?'Degree I complete':'Degree II complete',
-    stats:`You leave the ${ROOM_NAMES[S.room].replace(/^The /,'')} having spoken ${S.spoken} word${S.spoken===1?'':'s'}, ${S.tried.size} of the ${C.total} possible.`,
-    next:S.ch===1?'The winding stair rises ahead, and with it three new roots, three new actions, and the first modifiers.':'Beyond the inner door lies the Master\'s degree: ZOR, the modifiers -IM and -UL, and the last of the light words. (Not built yet.)',
-    hasNext:S.ch===1});
+  const C=CH[S.ch], E=ENDINGS[S.ch];
+  const stats=ENDING_STATS.replace('{room}',ROOM_NAMES[S.room].replace(/^The /,''))
+    .replace('{spoken}',`${S.spoken} word${S.spoken===1?'':'s'}`).replace('{tried}',S.tried.size).replace('{total}',C.total);
+  emit('ending',{ch:S.ch,title:E.title,stats,next:E.next,hasNext:S.ch===1});
 }
