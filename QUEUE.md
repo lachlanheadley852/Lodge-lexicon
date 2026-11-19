@@ -26,18 +26,19 @@ Design decisions that override the handoff are in `docs/DECISIONS.md` (the game 
   - `npm run build` passes; `docs/prototype/` untouched.
 
 ### F2 · Tests for the language and both solution paths
-- **Status:** In progress (worker 1)
+- **Status:** Merged to dev (33 tests)
 - **Branch:** `feature/F2-tests`
 - **Depends on:** F1
 - **Scope:** Node's built-in runner (`node --test`), no new dependencies, `npm test`. Cover word grammar, every Degree I/II word giving a non-empty response on every hotspot, and scripted playthroughs of both solution paths asserting flags after each step and reaching the ending.
 - **Done when:** `npm test` passes, and breaking any solution step makes a test fail.
 
 ### F3 · Puzzles and text as data
-- **Status:** Ready (after F2)
+- **Status:** In progress (worker 1)
 - **Branch:** `feature/F3-content-data`
 - **Depends on:** F2
 - **Scope:** Move hotspot descriptions, item uses and word responses into data under `src/game/content/` as rules like `{target, word: {root, action, mod?}, requires, sets, text}`, first match wins. Keep the generic fallback.
-- **Done when:** F2 tests pass unchanged; changing a puzzle response or description needs only a data edit.
+  - **Guard found by F2:** `interact('doorway')` ends the chapter even if the way is not open. Make finishing require it (Degree I: `S.f.door`; Degree II: `S.f.pillar && S.f.veilOpen`) so a 3D room can never let the player skip a puzzle. Add a near-miss test.
+- **Done when:** F2 tests pass unchanged (plus the new guard test); changing a puzzle response or description needs only a data edit.
 
 ## Phase 2: first-person 3D
 
