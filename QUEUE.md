@@ -33,7 +33,7 @@ Design decisions that override the handoff are in `docs/DECISIONS.md` (the game 
 - **Done when:** `npm test` passes, and breaking any solution step makes a test fail.
 
 ### F3 · Puzzles and text as data
-- **Status:** In progress (worker 1)
+- **Status:** Merged to dev (41 tests, incl. golden text snapshot)
 - **Branch:** `feature/F3-content-data`
 - **Depends on:** F2
 - **Scope:** Move hotspot descriptions, item uses and word responses into data under `src/game/content/` as rules like `{target, word: {root, action, mod?}, requires, sets, text}`, first match wins. Keep the generic fallback.
@@ -45,24 +45,26 @@ Design decisions that override the handoff are in `docs/DECISIONS.md` (the game 
 All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 
 ### 3D1 · First-person engine with a greybox room
-- **Status:** In progress (worker 2)
+- **Status:** Merged to dev (greybox room 1 solvable at `?3d`)
 - **Branch:** `feature/3D1-engine`
 - **Depends on:** F1 · *parallel-safe with F2*
 - **Scope:** `src/render/three/`: implement the renderer interface with Three.js. Pointer-lock mouse look, WASD/arrow walking at a calm pace, eye height ~1.6 m, collision against a simple per-room 2D floor plan (walls, prop footprints, no-walk zones). Centre crosshair; raycast picks the hotspot under it and shows its name; click routes to the existing interact / use-item / cast logic. Space highlights all hotspots in view. Tab frees the cursor for the panel; picking a word or item returns to looking. Room switching through doorway triggers with a short fade. Prove it with a greybox (untextured boxes) Chamber of Reflection whose hotspots all work.
 - **Done when:** with `?3d`, Degree I room 1 can be solved in greybox; without `?3d` the 2D game is unchanged; build passes.
 
 ### 3D2 · Materials, lighting and prop kit
-- **Status:** Ready (after F1)
+- **Status:** In progress (worker 1)
 - **Branch:** `feature/3D2-kit`
 - **Depends on:** F1 · *parallel-safe with 3D1 (own folder `src/render/three/kit/`)*
 - **Scope:** Code-made textures (dressed stone, brick, wood plank, iron, plaster) via canvas, with normal/roughness variation; candle (flame sprite + flickering point light with shadows); darkness/fog settings; builder functions for walls, floors (chequered lodge floor), arches, doors, pillars with globes, altar, table, lectern, bell, sconce, skull, hourglass. A dev-only showcase page under `src/render/three/kit/showcase.html` renders every builder.
 - **Done when:** the showcase shows every prop lit by candlelight at a steady frame rate on this PC.
+- **Notes from 3D1:** current lighting is far too bright once lit (walls blow out to white) and pure black before; 3D1 needed ambient ~16 / hemisphere ~5 / candle 60 cd. Own the renderer-wide lighting setup (tone mapping, exposure, light units, shadow settings) so rooms look like candlelit stone.
 
 ### 3D3 · Degree I: Chamber of Reflection and Hall of Instruction
 - **Status:** Ready (after 3D1 and 3D2)
 - **Branch:** `feature/3D3-degree1-early`
 - **Depends on:** 3D1, 3D2
 - **Scope:** Build both rooms with the kit, every hotspot from the 2D version, and all state changes (dark until lit, slab moved and key, bar, inner door opening, dust/book, veil and statue, cord, bell tied and rung, great door). Item use within reach.
+- **Notes from 3D1 review:** taking things (skull flint, bar, key, cord, book, veil, bell) currently works from across the room; apply the same 2.5 m reach rule to hotspots that pick up or physically handle something. Rooms rebuild from scratch on every flag change: switch to in-place updates. Add `spawns[fromRoom]` for every doorway. Only expose a `doorway` hotspot when the way is open.
 - **Done when:** with `?3d`, both rooms can be solved start to finish, and every 2D hotspot has a 3D counterpart.
 
 ### 3D4 · Degree I: Apprentice's Chamber
@@ -80,7 +82,7 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Done when:** Degree II can be completed in 3D.
 
 ### 3D6 · Word effects in 3D
-- **Status:** Ready (after 3D1)
+- **Status:** In progress (worker 2)
 - **Branch:** `feature/3D6-word-fx`
 - **Depends on:** 3D1 · *parallel-safe with 3D3*
 - **Scope:** In world space at the target: per-root particles (LUM sparks, KEL dust, HAL wisps, MIR ripples, RAS embers, VEL drifting frames) and per-action shapes (SE rings, TU closing dashed rings, PA split, MO spokes and hexagon, NE closing arcs, KA travelling dots); -ES beam from the player to the target first; -ON replays larger. Short-lived light from the root colour.
