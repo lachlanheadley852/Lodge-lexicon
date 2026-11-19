@@ -60,7 +60,7 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Notes from 3D1:** current lighting is far too bright once lit (walls blow out to white) and pure black before; 3D1 needed ambient ~16 / hemisphere ~5 / candle 60 cd. Own the renderer-wide lighting setup (tone mapping, exposure, light units, shadow settings) so rooms look like candlelit stone.
 
 ### 3D3 · Degree I: Chamber of Reflection and Hall of Instruction
-- **Status:** In progress (worker 1)
+- **Status:** Merged to dev (both rooms playable; reach for handling; in-place updates; spawns)
 - **Branch:** `feature/3D3-degree1-early`
 - **Depends on:** 3D1, 3D2
 - **Scope:** Build both rooms with the kit, every hotspot from the 2D version, and all state changes (dark until lit, slab moved and key, bar, inner door opening, dust/book, veil and statue, cord, bell tied and rung, great door). Item use within reach.
@@ -68,14 +68,14 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Done when:** with `?3d`, both rooms can be solved start to finish, and every 2D hotspot has a 3D counterpart.
 
 ### 3D4 · Degree I: Apprentice's Chamber
-- **Status:** Ready (after 3D3)
+- **Status:** In progress (worker 1)
 - **Branch:** `feature/3D4-apprentice`
 - **Depends on:** 3D3
 - **Scope:** Pillars, tracing board, altar, sconce and alcove with spiral, stone door with carved mouth and sigil ring, all states.
 - **Done when:** Degree I can be completed in 3D.
 
 ### 3D5 · Degree II: the Middle Chamber
-- **Status:** Ready (after 3D3) · *parallel-safe with 3D4*
+- **Status:** In progress (worker 2)
 - **Branch:** `feature/3D5-middle-chamber`
 - **Depends on:** 3D3
 - **Scope:** Chasm (no-walk, depth falling to black), far ledge and brazier, crown carried across, broken/mended pillar, water veil (falling, stilled to glass, parted), basin with mirrored writing, inner door, winding stair, inscriptions.
