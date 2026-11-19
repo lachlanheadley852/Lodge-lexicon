@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
+    "test": "node --test tests/",
     "build": "vite build",
     "preview": "vite preview --host",
     "publish:site": "node scripts/publish-site.mjs"
