@@ -6,7 +6,9 @@ import {createSvgRenderer} from './render/svg/index.js';
 import * as ui from './ui/panel.js';
 import {wireInput} from './ui/input.js';
 
-const renderer=createSvgRenderer();
+/* ?3d opens the first-person Three.js renderer (loaded on demand); otherwise the 2D SVG one. */
+const use3d=new URLSearchParams(location.search).has('3d');
+const renderer=use3d?(await import('./render/three/index.js')).createThreeRenderer():createSvgRenderer();
 renderer.mount(ui.$('stage'));
 ui.onCastingChange(on=>renderer.setCasting(on));
 
