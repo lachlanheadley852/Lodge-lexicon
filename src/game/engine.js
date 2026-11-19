@@ -3,7 +3,7 @@
  * Rules are checked in order and the first match wins. No DOM, no audio.
  * Rule fields are documented in content/README.md.
  */
-import {S, give, takeAway, learn, addLog} from './state.js';
+import {S, INV_MARK, give, takeAway, learn, addLog} from './state.js';
 import {emit} from './events.js';
 import {NAMES} from './data.js';
 
@@ -27,18 +27,30 @@ export function holds(list){ return !list||list.every(holds1); }
 
 const list=x=>x===undefined?null:Array.isArray(x)?x:[x];
 
-/* 'RAS-KA-ES' exact; 'LUM-SE' = no modifier; 'LUM-SE-*' any modifier; '*' for any root or action. */
+/*
+ * 'RAS-KA-ES' exact; 'LUM-SE' = no modifier; 'LUM-SE-*' any modifier; '*' = any root or action.
+ * Inversion is part of the word: a name written plainly matches only an UNflipped syllable, '✦KEL' only a
+ * flipped one, and '*' matches a syllable either way ('✦*' = any flipped one).
+ * Object form: {root,action,mod,inv:{root:true}}. Each part parses to {n: name|'*'|null, i: bool|undefined(any)}.
+ */
+const part=(s,flip)=>{
+  if(s===undefined||s===null) return {n:null,i:false};
+  if(s[0]===INV_MARK) return {n:s.slice(1),i:true};
+  return {n:s,i:s==='*'?(flip===undefined?undefined:!!flip):!!flip};
+};
 function parseWord(w){
-  if(typeof w==='string'){const [root,action,mod]=w.split('-'); return {root,action,mod};}
-  return {root:w.root||'*',action:w.action||'*',mod:w.mod};
+  if(typeof w==='string'){const [r,a,m]=w.split('-'); return {root:part(r),action:part(a),mod:part(m)};}
+  const inv=w.inv||{};
+  return {root:part(w.root||'*',inv.root),action:part(w.action||'*',inv.action),mod:part(w.mod,inv.mod)};
+}
+function partMatches(p,syl,flipped){
+  if(p.n==='*') return p.i===undefined||p.i===!!flipped;
+  return (p.n||null)===(syl||null)&&(!p.n||p.i===!!flipped);
 }
 function wordMatches(spec,word){
   if(spec===undefined) return true;
-  const {root,action,mod}=parseWord(spec);
-  if(root!=='*'&&root!==word.root) return false;
-  if(action!=='*'&&action!==word.action) return false;
-  if(mod==='*') return true;
-  return (mod||null)===(word.mod||null);
+  const {root,action,mod}=parseWord(spec), inv=word.inv||{};
+  return partMatches(root,word.root,inv.root)&&partMatches(action,word.action,inv.action)&&partMatches(mod,word.mod,inv.mod);
 }
 /* target: an id, a list of ids, or {id, requires} entries inside the list. */
 function targetMatches(spec,t){

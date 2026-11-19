@@ -18,6 +18,8 @@ export const ACTIONS={
 export const PAIRS={
   'VEL-SE':`{R} flickers over {n}, but nothing happened here worth remembering.`
 };
+/* A word carrying the Lost Word that nothing answered. {W} is built from the (flipped) meanings, e.g. "ruin, shut". */
+export const INVERTED=`The word runs dark: {W}. Nothing at {n} answers it yet.`;
 export const MODIFIERS={
   ON:` The word rings out doubled, but more of nothing is still nothing.`,
   ES:` The word reaches far, but distance was not what this needed.`

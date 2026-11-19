@@ -15,3 +15,6 @@ export default [
   {word:'HAL-PA-*', requires:['breath'], text:`You almost release the old voice at {n}, then hold it back. It belongs somewhere that is listening.`},
   {word:'HAL-PA-*', text:`Your breath flows out toward {n} and scatters.`}
 ];
+
+/* Degree I: the reply to a word carrying the Lost Word (a flipped syllable) that nothing above answered. */
+export const INVERTED1=`The word turns inside out as you say it. {n} stays as it is, and the dark half of the word finds nothing to answer it.`;

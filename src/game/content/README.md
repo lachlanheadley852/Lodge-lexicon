@@ -40,6 +40,18 @@ general ones. If nothing matches, a word falls back to the generic reply and a c
 - **word**: `'RAS-KA-ES'` is exact. `'RAS-KA'` means "with no modifier". `'RAS-KA-*'` means any modifier
   (or none). `'*-KA-*'` means any root, `'RAS-*-ES'` any action. Leave `word` out to match any word.
   Degree I has no modifiers, so its words always end in `-*`.
+  - **The Lost Word (inversion, not reachable yet).** A flipped syllable is written with `✦` in front:
+    `'✦KEL-PA'` (ruin + open), `'LUM-✦SE-ON'` (light, concealed, stronger). The flip is part of the word:
+    a plainly written name matches only an *unflipped* syllable, so `'KEL-PA'` never matches `✦KEL-PA`, and
+    `'LUM-SE-*'` never matches a flipped `LUM` or `SE`. `*` matches a root, action or modifier **whether or
+    not it is flipped** (so `'*-KA-*'` also catches `✦RAS-KA`); write `✦*` to match only flipped ones
+    (`'✦*-KA-*'`). `-*` as the modifier matches any modifier, flipped or not, or none; `'LUM-SE'` (no
+    modifier) does not match `LUM-SE-✦ON`. Object form: `{root:'KEL', action:'PA', inv:{root:true}}`; the
+    `inv` flags default to false for named syllables and "either" for `*`/omitted ones.
+    Words with a flipped syllable that no rule answers get a generic line (`INVERTED1` in `generic1.js`,
+    `INVERTED` in `phrases2.js`, built from each syllable's `dark` meaning in `data.js`). Dark words cost nothing.
+    The Lost Word's real sound and hiding place are open designer questions (HANDOFF section 7); until
+    then flipping works only while the flag `lostWord` is set, and nothing sets it.
 - **item**: (items only) the item id: `'flint'`, `'bar'`, `'key'`, `'cord'`, or a list.
 - **room**: only in this room (`'hall'`, or a list). Used where the same hotspot exists in two rooms.
 - **requires**: a list of conditions, all of which must hold.
