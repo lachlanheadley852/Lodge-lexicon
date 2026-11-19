@@ -89,7 +89,7 @@ All 3D work is behind `?3d` until 3D8 flips the default. Three.js is the engine.
 - **Done when:** every syllable's signature in HANDOFF section 2 is visible in 3D.
 
 ### 3D7 · Mobile and touch
-- **Status:** In progress (worker 2)
+- **Status:** Merged to dev (stick, drag-look, tap, Reveal; phone layouts; quality tiers). Needs a real-phone test of feel and frame rate.
 - **Branch:** `feature/3D7-touch`
 - **Depends on:** 3D1 · *parallel-safe with 3D3 (controls, HUD and panel layout only; no room files)*
 - **Scope:** On-screen stick to walk, drag to look, tap to interact, panel layout for phones, quality settings (shadow resolution, pixel ratio) chosen by device.
